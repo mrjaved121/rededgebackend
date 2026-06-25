@@ -1,7 +1,11 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const multer = require('multer');
+const ExcelJS = require('exceljs');
 const ChecklistTemplate = require('../models/ChecklistTemplate');
 const { auth, adminOnly } = require('../middleware/auth');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
@@ -13,6 +17,92 @@ router.get('/', auth, async (req, res) => {
       .sort({ name: 1 });
 
     res.json({ templates });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/v1/checklists/:systemType/export — download template as Excel
+router.get('/:systemType/export', auth, adminOnly, async (req, res) => {
+  try {
+    const template = await ChecklistTemplate.findOne({ systemType: req.params.systemType });
+    if (!template) return res.status(404).json({ error: 'Checklist template not found' });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Steps');
+
+    sheet.columns = [
+      { header: 'number', key: 'number', width: 10 },
+      { header: 'section', key: 'section', width: 20 },
+      { header: 'title', key: 'title', width: 40 },
+      { header: 'description', key: 'description', width: 40 },
+      { header: 'inputType', key: 'inputType', width: 15 },
+      { header: 'inputLabel', key: 'inputLabel', width: 20 },
+      { header: 'options', key: 'options', width: 30 },
+      { header: 'requiresPhoto', key: 'requiresPhoto', width: 15 },
+    ];
+
+    // Bold header row
+    sheet.getRow(1).font = { bold: true };
+
+    template.steps.forEach((step) => {
+      sheet.addRow({
+        number: step.number,
+        section: step.section || '',
+        title: step.title,
+        description: step.description || '',
+        inputType: step.inputType || 'checkbox',
+        inputLabel: step.inputLabel || '',
+        options: (step.options || []).join('|'),
+        requiresPhoto: step.requiresPhoto ? 'true' : 'false',
+      });
+    });
+
+    const safeName = template.name.replace(/[^a-z0-9]/gi, '_');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}.xlsx"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/v1/checklists/:systemType/import — upload Excel to update template
+router.post('/:systemType/import', auth, adminOnly, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const template = await ChecklistTemplate.findOne({ systemType: req.params.systemType });
+    if (!template) return res.status(404).json({ error: 'Checklist template not found' });
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(req.file.buffer);
+    const sheet = workbook.worksheets[0];
+
+    const steps = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // skip header
+      const [number, section, title, description, inputType, inputLabel, options, requiresPhoto] = row.values.slice(1);
+      if (!title) return; // skip empty rows
+      steps.push({
+        number: Number(number) || rowNumber - 1,
+        section: section || '',
+        title: String(title),
+        description: description ? String(description) : '',
+        inputType: inputType || 'checkbox',
+        inputLabel: inputLabel ? String(inputLabel) : '',
+        options: options ? String(options).split('|').filter(Boolean) : [],
+        requiresPhoto: String(requiresPhoto).toLowerCase() === 'true',
+      });
+    });
+
+    if (steps.length === 0) return res.status(400).json({ error: 'Excel file has no valid steps' });
+
+    template.steps = steps;
+    await template.save();
+
+    res.json({ message: `Updated ${steps.length} steps for "${template.name}"`, template });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

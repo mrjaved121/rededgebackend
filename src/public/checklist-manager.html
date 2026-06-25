@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red Edge — Checklist Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #172b4d; min-height: 100vh; }
+
+    /* Login */
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); padding: 40px; width: 360px; }
+    .login-card h1 { font-size: 22px; margin-bottom: 6px; }
+    .login-card p { color: #6b778c; font-size: 14px; margin-bottom: 24px; }
+    .login-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .login-card input { width: 100%; padding: 10px 12px; border: 1px solid #dfe1e6; border-radius: 4px; font-size: 14px; margin-bottom: 16px; outline: none; }
+    .login-card input:focus { border-color: #0052cc; }
+    #login-error { color: #de350b; font-size: 13px; margin-bottom: 12px; display: none; }
+
+    /* App */
+    #app-screen { display: none; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .app-header h1 { font-size: 24px; }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
+    .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .card p { font-size: 13px; color: #6b778c; margin-bottom: 16px; }
+
+    /* Template list */
+    .template-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f4f5f7; }
+    .template-row:last-child { border-bottom: none; }
+    .template-name { font-size: 14px; font-weight: 500; }
+    .template-meta { font-size: 12px; color: #6b778c; margin-top: 2px; }
+
+    /* Import section */
+    select { width: 100%; padding: 10px 12px; border: 1px solid #dfe1e6; border-radius: 4px; font-size: 14px; margin-bottom: 12px; outline: none; background: #fff; }
+    select:focus { border-color: #0052cc; }
+    .file-drop { border: 2px dashed #dfe1e6; border-radius: 6px; padding: 24px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; }
+    .file-drop:hover, .file-drop.over { border-color: #0052cc; background: #f0f4ff; }
+    .file-drop p { font-size: 13px; color: #6b778c; }
+    .file-drop input[type="file"] { display: none; }
+    #selected-file { font-size: 13px; color: #0052cc; margin-bottom: 12px; min-height: 18px; }
+    #import-result { font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .success { color: #006644; } .error-msg { color: #de350b; }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+    .btn-primary { background: #0052cc; color: #fff; }
+    .btn-primary:hover { background: #0065ff; }
+    .btn-primary:disabled { background: #b3d4ff; cursor: not-allowed; }
+    .btn-secondary { background: #f4f5f7; color: #172b4d; border: 1px solid #dfe1e6; }
+    .btn-secondary:hover { background: #ebecf0; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-link { background: none; border: none; color: #de350b; font-size: 13px; cursor: pointer; padding: 0; }
+    .btn-link:hover { text-decoration: underline; }
+
+    .loading { color: #6b778c; font-size: 14px; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #dfe1e6; border-top-color: #0052cc; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Red Edge</h1>
+    <p>Checklist Manager — Admin only</p>
+    <label>Email</label>
+    <input type="email" id="email" placeholder="admin@example.com" />
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" />
+    <div id="login-error"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="login()">Sign in</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="app-header">
+    <h1>Checklist Manager</h1>
+    <button class="btn-link" onclick="logout()">Sign out</button>
+  </div>
+
+  <!-- Download -->
+  <div class="card">
+    <h2>Download Checklist as Excel</h2>
+    <p>Pick a checklist template and download it as an Excel file. Edit the steps, then re-upload below.</p>
+    <div id="template-list"><span class="loading"><span class="spinner"></span>Loading templates…</span></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="card">
+    <h2>Upload Edited Excel</h2>
+    <p>Select which checklist to update, then upload your edited Excel file. <strong>This will replace all steps.</strong></p>
+    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px">Checklist to update</label>
+    <select id="import-select"><option value="">— select a checklist —</option></select>
+
+    <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".xlsx" onchange="onFileSelected(this)" />
+      <p>Click to choose an Excel file (.xlsx)</p>
+      <p>or drag and drop here</p>
+    </div>
+    <div id="selected-file"></div>
+    <button class="btn btn-primary" id="upload-btn" onclick="uploadFile()" disabled>Upload &amp; Update</button>
+    <div id="import-result"></div>
+  </div>
+</div>
+
+<script>
+  const BASE = window.location.origin;
+  let token = localStorage.getItem('re_token') || '';
+  let templates = [];
+
+  // ── Auth ────────────────────────────────────────────────────────
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.style.display = 'none';
+    try {
+      const res = await fetch(`${BASE}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (data.user && data.user.role !== 'admin') throw new Error('Admin access required');
+      token = data.token;
+      localStorage.setItem('re_token', token);
+      showApp();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('re_token');
+    token = '';
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  // ── App ──────────────────────────────────────────────────────────
+  async function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    await loadTemplates();
+  }
+
+  async function loadTemplates() {
+    try {
+      const res = await fetch(`${BASE}/api/v1/checklists`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      templates = data.templates || [];
+      renderTemplateList();
+      renderImportSelect();
+    } catch (e) {
+      document.getElementById('template-list').innerHTML = `<span class="error-msg">Failed to load templates.</span>`;
+    }
+  }
+
+  function renderTemplateList() {
+    const el = document.getElementById('template-list');
+    if (templates.length === 0) {
+      el.innerHTML = '<p style="color:#6b778c;font-size:14px">No checklist templates found.</p>';
+      return;
+    }
+    el.innerHTML = templates.map(t => `
+      <div class="template-row">
+        <div>
+          <div class="template-name">${t.name}</div>
+          <div class="template-meta">${t.steps.length} steps &nbsp;·&nbsp; ${t.systemType}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">Download Excel</button>
+      </div>
+    `).join('');
+  }
+
+  function renderImportSelect() {
+    const sel = document.getElementById('import-select');
+    sel.innerHTML = '<option value="">— select a checklist —</option>' +
+      templates.map(t => `<option value="${encodeURIComponent(t.systemType)}">${t.name}</option>`).join('');
+  }
+
+  // ── Export ───────────────────────────────────────────────────────
+  async function downloadExcel(systemTypeEncoded, name) {
+    try {
+      const res = await fetch(`${BASE}/api/v1/checklists/${systemTypeEncoded}/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { alert('Export failed'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Download failed: ' + e.message);
+    }
+  }
+
+  // ── Import ───────────────────────────────────────────────────────
+  let selectedFile = null;
+
+  function onFileSelected(input) {
+    selectedFile = input.files[0] || null;
+    document.getElementById('selected-file').textContent = selectedFile ? `Selected: ${selectedFile.name}` : '';
+    document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const zone = document.getElementById('drop-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.name.endsWith('.xlsx')) {
+        selectedFile = f;
+        document.getElementById('selected-file').textContent = `Selected: ${f.name}`;
+        document.getElementById('upload-btn').disabled = !document.getElementById('import-select').value;
+      } else { alert('Please drop an .xlsx file'); }
+    });
+    document.getElementById('import-select').addEventListener('change', () => {
+      document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
+    });
+
+    // Auto-login if token exists
+    if (token) showApp();
+  });
+
+  async function uploadFile() {
+    const systemTypeEncoded = document.getElementById('import-select').value;
+    if (!systemTypeEncoded || !selectedFile) return;
+
+    const btn = document.getElementById('upload-btn');
+    const result = document.getElementById('import-result');
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+    result.textContent = '';
+    result.className = '';
+
+    try {
+      const form = new FormData();
+      form.append('file', selectedFile);
+      const res = await fetch(`${BASE}/api/v1/checklists/${systemTypeEncoded}/import`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      result.textContent = `✓ ${data.message}`;
+      result.className = 'success';
+      selectedFile = null;
+      document.getElementById('selected-file').textContent = '';
+      document.getElementById('file-input').value = '';
+      await loadTemplates();
+    } catch (e) {
+      result.textContent = `✗ ${e.message}`;
+      result.className = 'error-msg';
+    } finally {
+      btn.textContent = 'Upload & Update';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

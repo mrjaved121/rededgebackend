@@ -24,6 +24,12 @@ const uploadDir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads'
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 app.use('/uploads', express.static(uploadDir));
 
+// Checklist manager page
+app.use('/checklist-manager', express.static(path.join(__dirname, 'public')));
+app.get('/checklist-manager', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'checklist-manager.html'));
+});
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/jobs', jobRoutes);
