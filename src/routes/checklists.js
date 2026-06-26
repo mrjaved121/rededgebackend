@@ -18,7 +18,8 @@ router.get('/', auth, async (req, res) => {
 
     res.json({ templates });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -64,7 +65,8 @@ router.get('/:systemType/export', auth, adminOnly, async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -104,7 +106,8 @@ router.post('/:systemType/import', auth, adminOnly, upload.single('file'), async
 
     res.json({ message: `Updated ${steps.length} steps for "${template.name}"`, template });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -121,7 +124,8 @@ router.get('/:systemType', auth, async (req, res) => {
 
     res.json(template);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -167,7 +171,8 @@ router.post(
 
       res.status(201).json(template);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
@@ -180,7 +185,8 @@ router.delete('/:systemType', auth, adminOnly, async (req, res) => {
     });
     res.json({ message: 'Template deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

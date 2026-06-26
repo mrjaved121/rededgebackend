@@ -6,6 +6,12 @@ const Job = require('../models/Job');
 const SystemType = require('../models/SystemType');
 
 async function seed() {
+  // Safety guard — require explicit opt-in to prevent accidental production wipe
+  if (process.env.ALLOW_SEED !== 'true') {
+    console.error('ERROR: Seed is disabled. Set ALLOW_SEED=true to run it intentionally.');
+    process.exit(1);
+  }
+
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
 

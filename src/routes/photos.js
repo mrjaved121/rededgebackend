@@ -11,19 +11,13 @@ const router = express.Router();
 // POST /api/v1/photos/upload — upload photo file + metadata
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
   try {
-    console.log('[PHOTO UPLOAD] Request received');
-    console.log('[PHOTO UPLOAD] Body:', JSON.stringify(req.body));
-    console.log('[PHOTO UPLOAD] File:', req.file ? { originalname: req.file.originalname, size: req.file.size, path: req.file.path } : 'NO FILE');
-
     if (!req.file) {
-      console.log('[PHOTO UPLOAD] ERROR: No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { jobId, stepId, latitude, longitude, address, annotation } = req.body;
 
     // Upload to ImageKit
-    console.log('[PHOTO UPLOAD] Uploading to ImageKit...');
     const fileBuffer = fs.readFileSync(req.file.path);
     const ikResponse = await imagekit.upload({
       file: fileBuffer,
@@ -31,7 +25,6 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       folder: `/rededge/jobs/${jobId || 'unassigned'}`,
       tags: [jobId, stepId].filter(Boolean),
     });
-    console.log('[PHOTO UPLOAD] ImageKit response:', { url: ikResponse.url, fileId: ikResponse.fileId, thumbnailUrl: ikResponse.thumbnailUrl });
 
     // Remove local temp file after upload
     fs.unlink(req.file.path, () => {});
@@ -75,7 +68,6 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       }
     }
 
-    console.log('[PHOTO UPLOAD] Photo saved to DB:', photo._id);
     res.status(201).json({
       id: photo._id,
       filePath: photo.filePath,
@@ -89,8 +81,8 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       capturedAt: photo.capturedAt,
     });
   } catch (err) {
-    console.error('[PHOTO UPLOAD] ERROR:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -122,7 +114,8 @@ router.get('/', auth, async (req, res) => {
       })),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -144,7 +137,8 @@ router.delete('/:id', auth, async (req, res) => {
     await Photo.findByIdAndDelete(req.params.id);
     res.json({ message: 'Photo deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

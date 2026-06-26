@@ -12,9 +12,10 @@ router.get('/', auth, async (req, res) => {
     const filter = { isActive: true };
     if (role) filter.role = role;
     if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
+        { name: { $regex: safeSearch, $options: 'i' } },
+        { email: { $regex: safeSearch, $options: 'i' } },
       ];
     }
 
@@ -33,7 +34,8 @@ router.get('/', auth, async (req, res) => {
       })),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -53,7 +55,8 @@ router.get('/installers', auth, async (req, res) => {
       })),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -99,7 +102,8 @@ router.post(
         phone: user.phone,
       });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
@@ -127,7 +131,8 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
       isActive: user.isActive,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -142,7 +147,8 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 
     res.json({ message: 'User deactivated' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

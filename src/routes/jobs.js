@@ -23,10 +23,11 @@ router.get('/', auth, async (req, res) => {
     if (status && status !== 'all') filter.status = status;
     if (system && system !== 'all') filter.systemType = system;
     if (search) {
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { jobNumber: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
+        { title: { $regex: safeSearch, $options: 'i' } },
+        { jobNumber: { $regex: safeSearch, $options: 'i' } },
+        { company: { $regex: safeSearch, $options: 'i' } },
       ];
     }
 
@@ -82,7 +83,8 @@ router.get('/', auth, async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -98,7 +100,8 @@ router.get('/:id', auth, async (req, res) => {
 
     res.json(formatJob(job));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -186,7 +189,8 @@ router.post(
 
       res.status(201).json(formatJob(populated));
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
@@ -254,7 +258,8 @@ router.put('/:id', auth, async (req, res) => {
 
     res.json(formatJob(populated));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -275,7 +280,8 @@ router.delete('/:id', auth, async (req, res) => {
     await Job.findByIdAndDelete(req.params.id);
     res.json({ message: 'Job deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -296,7 +302,8 @@ router.patch('/:id/status', auth, async (req, res) => {
 
     res.json(formatJob(populated));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -339,7 +346,8 @@ router.patch('/:id/steps/:stepIndex', auth, async (req, res) => {
 
     res.json(formatJob(populated));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

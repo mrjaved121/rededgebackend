@@ -17,7 +17,8 @@ router.get('/', auth, async (req, res) => {
       })),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -50,7 +51,8 @@ router.post(
         createdAt: systemType.createdAt,
       });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
@@ -64,7 +66,8 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
     await SystemType.findByIdAndDelete(req.params.id);
     res.json({ message: 'System type deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
