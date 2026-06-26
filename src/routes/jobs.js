@@ -308,25 +308,31 @@ router.patch('/:id/status', auth, async (req, res) => {
 });
 
 // PATCH /api/v1/jobs/:id/steps/:stepIndex — complete step
+// stepIndex can be either a MongoDB _id string or a numeric array index
 router.patch('/:id/steps/:stepIndex', auth, async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
-    const idx = parseInt(req.params.stepIndex);
-    if (idx < 0 || idx >= job.steps.length) {
-      return res.status(400).json({ error: 'Invalid step index' });
+    // Find step by _id first; fall back to numeric index for legacy callers
+    let step = job.steps.id(req.params.stepIndex);
+    if (!step) {
+      const idx = parseInt(req.params.stepIndex);
+      if (isNaN(idx) || idx < 0 || idx >= job.steps.length) {
+        return res.status(400).json({ error: 'Step not found' });
+      }
+      step = job.steps[idx];
     }
 
     if (req.body.isCompleted !== undefined) {
-      job.steps[idx].isCompleted = req.body.isCompleted;
-      if (req.body.isCompleted) job.steps[idx].completedAt = new Date();
+      step.isCompleted = req.body.isCompleted;
+      if (req.body.isCompleted) step.completedAt = new Date();
     }
     if (req.body.notes !== undefined) {
-      job.steps[idx].notes = req.body.notes;
+      step.notes = req.body.notes;
     }
     if (req.body.inputValue !== undefined) {
-      job.steps[idx].inputValue = req.body.inputValue;
+      step.inputValue = req.body.inputValue;
     }
 
     // Update job status based on steps
