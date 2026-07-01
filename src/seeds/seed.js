@@ -4,6 +4,7 @@ const User = require('../models/User');
 const ChecklistTemplate = require('../models/ChecklistTemplate');
 const Job = require('../models/Job');
 const SystemType = require('../models/SystemType');
+const { dozerBladeMountSteps, drillRigPilingSteps } = require('./newMachineTemplates');
 
 async function seed() {
   // Safety guard — require explicit opt-in to prevent accidental production wipe
@@ -63,11 +64,13 @@ async function seed() {
     'Hemisphere VR1000 Excavator',
     'Stonex STX-DIG Excavator',
     'Stonex STX-DIG Dozer',
+    'Dozer Blade Mount',
+    'Drill Rig / Piling Machine',
   ];
   for (const name of systemTypeNames) {
     await SystemType.create({ name, createdBy: admin._id });
   }
-  console.log('Created 4 system types');
+  console.log('Created 6 system types');
 
   // ── Create Checklist Templates ────────────────────────
 
@@ -442,6 +445,21 @@ async function seed() {
     steps: hemisphereExcavatorSteps,
   });
 
+  // Dozer Blade Mount + Drill Rig / Piling Machine - see newMachineTemplates.js
+  await ChecklistTemplate.create({
+    systemType: 'Dozer Blade Mount',
+    name: 'Dozer Blade Mount',
+    createdBy: admin._id,
+    steps: dozerBladeMountSteps,
+  });
+
+  await ChecklistTemplate.create({
+    systemType: 'Drill Rig / Piling Machine',
+    name: 'Drill Rig / Piling Machine',
+    createdBy: admin._id,
+    steps: drillRigPilingSteps,
+  });
+
   // Placeholder templates for Stonex (to be filled in later)
   await ChecklistTemplate.create({
     systemType: 'Stonex STX-DIG Dozer',
@@ -478,7 +496,7 @@ async function seed() {
     ],
   });
 
-  console.log('Created 4 checklist templates (Hemisphere Dozer/Excavator comprehensive, Stonex placeholder)');
+  console.log('Created 6 checklist templates (Hemisphere Dozer/Excavator comprehensive, Dozer Blade Mount, Drill Rig placeholder, Stonex placeholder)');
 
   // ── Create Sample Jobs ────────────────────────────────
   await Job.create({

@@ -84,6 +84,23 @@
     <button class="btn-link" onclick="logout()">Sign out</button>
   </div>
 
+  <!-- Add New Machine -->
+  <div class="card">
+    <h2>Add New Machine</h2>
+    <p>Give it a name and, optionally, a starter Excel sheet. If you skip the file, it's added with one placeholder step you can edit and upload later.</p>
+    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px">Machine / Checklist Name</label>
+    <input type="text" id="new-machine-name" placeholder="e.g. Cab Mount Excavator" style="width:100%;padding:10px 12px;border:1px solid #dfe1e6;border-radius:4px;font-size:14px;margin-bottom:12px;outline:none;" />
+
+    <div class="file-drop" id="add-drop-zone" onclick="document.getElementById('add-file-input').click()">
+      <input type="file" id="add-file-input" accept=".xlsx" onchange="onAddFileSelected(this)" />
+      <p>Click to choose a starter Excel file (.xlsx) — optional</p>
+      <p>or drag and drop here</p>
+    </div>
+    <div id="add-selected-file" style="font-size:13px;color:#0052cc;margin-bottom:12px;min-height:18px;"></div>
+    <button class="btn btn-primary" id="add-machine-btn" onclick="addMachine()">Add Machine</button>
+    <div id="add-machine-result" style="font-size:13px;margin-top:10px;min-height:18px;"></div>
+  </div>
+
   <!-- Download -->
   <div class="card">
     <h2>Download Checklist as Excel</h2>
@@ -146,10 +163,12 @@
   }
 
   // ── App ──────────────────────────────────────────────────────────
+  let systemTypeIdByName = {};
+
   async function showApp() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
-    await loadTemplates();
+    await Promise.all([loadTemplates(), loadSystemTypes()]);
   }
 
   async function loadTemplates() {
@@ -167,6 +186,20 @@
     }
   }
 
+  async function loadSystemTypes() {
+    try {
+      const res = await fetch(`${BASE}/api/v1/system-types`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      systemTypeIdByName = {};
+      (data.systemTypes || []).forEach(t => { systemTypeIdByName[t.name] = t.id; });
+    } catch (e) {
+      // Non-fatal — delete will just report a clearer error if the id lookup is missing
+    }
+  }
+
   function renderTemplateList() {
     const el = document.getElementById('template-list');
     if (templates.length === 0) {
@@ -179,7 +212,10 @@
           <div class="template-name">${t.name}</div>
           <div class="template-meta">${t.steps.length} steps &nbsp;·&nbsp; ${t.systemType}</div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">Download Excel</button>
+        <div>
+          <button class="btn btn-secondary btn-sm" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">Download Excel</button>
+          <button class="btn-link" style="margin-left:12px" onclick="deleteMachine('${t.systemType.replace(/'/g,"\\'")}', '${t.name.replace(/'/g,"\\'")}')">Delete</button>
+        </div>
       </div>
     `).join('');
   }
@@ -209,6 +245,103 @@
     }
   }
 
+  // ── Add New Machine ─────────────────────────────────────────────
+  let addMachineFile = null;
+
+  function onAddFileSelected(input) {
+    addMachineFile = input.files[0] || null;
+    document.getElementById('add-selected-file').textContent = addMachineFile ? `Selected: ${addMachineFile.name}` : '';
+  }
+
+  async function addMachine() {
+    const nameInput = document.getElementById('new-machine-name');
+    const name = nameInput.value.trim();
+    const btn = document.getElementById('add-machine-btn');
+    const result = document.getElementById('add-machine-result');
+    result.textContent = '';
+    result.className = '';
+
+    if (!name) {
+      result.textContent = '✗ Enter a machine name first';
+      result.className = 'error-msg';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+
+    try {
+      const stRes = await fetch(`${BASE}/api/v1/system-types`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      const stData = await stRes.json();
+      if (!stRes.ok) throw new Error(stData.error || 'Could not create machine');
+
+      const ctRes = await fetch(`${BASE}/api/v1/checklists`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          systemType: name,
+          name,
+          steps: [{ number: 1, section: 'General', title: 'Placeholder step — edit or upload a sheet', requiresPhoto: false }],
+        }),
+      });
+      const ctData = await ctRes.json();
+      if (!ctRes.ok) throw new Error(ctData.error || 'Could not create checklist');
+
+      if (addMachineFile) {
+        const form = new FormData();
+        form.append('file', addMachineFile);
+        const impRes = await fetch(`${BASE}/api/v1/checklists/${encodeURIComponent(name)}/import`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        });
+        const impData = await impRes.json();
+        if (!impRes.ok) throw new Error(impData.error || 'Machine created, but the sheet upload failed — you can re-upload it below');
+      }
+
+      result.textContent = `✓ "${name}" added${addMachineFile ? ' with your sheet' : ' with a placeholder step'}`;
+      result.className = 'success';
+      nameInput.value = '';
+      addMachineFile = null;
+      document.getElementById('add-selected-file').textContent = '';
+      document.getElementById('add-file-input').value = '';
+      await showApp();
+    } catch (e) {
+      result.textContent = `✗ ${e.message}`;
+      result.className = 'error-msg';
+    } finally {
+      btn.textContent = 'Add Machine';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Delete ───────────────────────────────────────────────────────
+  async function deleteMachine(systemType, name) {
+    if (!confirm(`Delete "${name}"? This won't affect any jobs already created for it — it just won't be available to pick for new jobs anymore.`)) {
+      return;
+    }
+    try {
+      await fetch(`${BASE}/api/v1/checklists/${encodeURIComponent(systemType)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const id = systemTypeIdByName[systemType];
+      if (id) {
+        await fetch(`${BASE}/api/v1/system-types/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      await showApp();
+    } catch (e) {
+      alert('Delete failed: ' + e.message);
+    }
+  }
+
   // ── Import ───────────────────────────────────────────────────────
   let selectedFile = null;
 
@@ -233,6 +366,18 @@
     });
     document.getElementById('import-select').addEventListener('change', () => {
       document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
+    });
+
+    const addZone = document.getElementById('add-drop-zone');
+    addZone.addEventListener('dragover', e => { e.preventDefault(); addZone.classList.add('over'); });
+    addZone.addEventListener('dragleave', () => addZone.classList.remove('over'));
+    addZone.addEventListener('drop', e => {
+      e.preventDefault(); addZone.classList.remove('over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.name.endsWith('.xlsx')) {
+        addMachineFile = f;
+        document.getElementById('add-selected-file').textContent = `Selected: ${f.name}`;
+      } else { alert('Please drop an .xlsx file'); }
     });
 
     // Auto-login if token exists
