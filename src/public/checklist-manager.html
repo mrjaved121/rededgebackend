@@ -19,6 +19,8 @@
       --bg: #F7F8FA;
       --success: #067647;
       --success-bg: #ECFDF3;
+      --warning: #B54708;
+      --warning-bg: #FFFAEB;
       --danger: #DC2626;
       --danger-hover: #B91C1C;
       --danger-bg: #FEF2F2;
@@ -62,40 +64,51 @@
     .topbar-brand-text h2 { font-size: 15px; font-weight: 700; line-height: 1.2; }
     .topbar-brand-text span { font-size: 12px; color: #98A2B3; }
 
-    .container { max-width: 880px; margin: 0 auto; padding: 32px 24px 80px; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 32px 24px 80px; }
     .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }
     .page-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 6px; }
     .page-head .subtitle { color: var(--ink-soft); font-size: 14px; max-width: 480px; }
-    .stat-pills { display: flex; gap: 10px; flex-wrap: wrap; }
-    .stat-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px; font-size: 13px; color: var(--ink-soft); white-space: nowrap; box-shadow: var(--shadow-sm); }
-    .stat-pill strong { color: var(--ink); font-weight: 700; }
+
+    /* ── Stat cards ────────────────────────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 720px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 20px; display: flex; align-items: center; gap: 14px; }
+    .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-card .stat-icon svg { width: 22px; height: 22px; }
+    .stat-icon.blue { background: var(--primary-light); color: var(--primary); }
+    .stat-icon.amber { background: var(--warning-bg); color: var(--warning); }
+    .stat-value { font-size: 24px; font-weight: 700; line-height: 1.1; }
+    .stat-label { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
 
     /* ── Cards ─────────────────────────────────────────────────── */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 24px; margin-bottom: 20px; }
-    .card-accent { border-color: #F5C6BE; }
-    .card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    .card-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .card-toolbar h2 { font-size: 16px; font-weight: 700; }
+    .search-box { position: relative; width: 260px; }
+    .search-box svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--ink-faint); }
+    .search-box input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13.5px; outline: none; font-family: inherit; transition: border-color .15s, box-shadow .15s; }
+    .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
     .icon-badge { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--primary-light); color: var(--primary); }
     .icon-badge.accent { background: #FBEAE7; color: var(--brand); }
+    .icon-badge.danger { background: var(--danger-bg); color: var(--danger); }
     .icon-badge svg { width: 18px; height: 18px; }
-    .card-head h2 { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
-    .card-head p { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
 
     /* ── Form controls ─────────────────────────────────────────── */
     label.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
-    input[type="text"], select {
+    input[type="text"] {
       width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
       font-size: 14px; margin-bottom: 14px; outline: none; background: var(--surface); font-family: inherit; color: var(--ink);
       transition: border-color .15s, box-shadow .15s;
     }
-    input[type="text"]:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-    select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2398A2B3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
 
     .file-drop {
-      border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center;
+      border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 22px; text-align: center;
       cursor: pointer; transition: border-color .15s, background .15s; margin-bottom: 10px; background: #FBFBFC;
     }
     .file-drop:hover, .file-drop.over { border-color: var(--primary); background: var(--primary-light); }
-    .file-drop svg { width: 26px; height: 26px; color: var(--ink-faint); margin-bottom: 8px; }
+    .file-drop svg { width: 24px; height: 24px; color: var(--ink-faint); margin-bottom: 8px; }
     .file-drop:hover svg, .file-drop.over svg { color: var(--primary); }
     .file-drop p { font-size: 13px; color: var(--ink-soft); }
     .file-drop p.primary { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
@@ -107,7 +120,7 @@
     .file-chip button { background: none; border: none; cursor: pointer; color: var(--primary); display: flex; padding: 2px; margin-left: 4px; }
 
     /* ── Buttons ───────────────────────────────────────────────── */
-    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: background .15s, box-shadow .15s, opacity .15s; font-family: inherit; }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: background .15s, box-shadow .15s, opacity .15s; font-family: inherit; white-space: nowrap; }
     .btn svg { width: 16px; height: 16px; }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
@@ -119,8 +132,9 @@
     .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
     .btn-ghost:hover { background: #F2F4F7; }
     .btn-sm { padding: 7px 12px; font-size: 12.5px; }
-    .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: var(--radius-sm); }
-    .btn-icon.danger-outline { background: var(--surface); border: 1px solid var(--border); color: var(--danger); }
+    .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); color: var(--ink-soft); }
+    .btn-icon:hover { background: #F2F4F7; }
+    .btn-icon.danger-outline { color: var(--danger); }
     .btn-icon.danger-outline:hover { background: var(--danger-bg); border-color: #FCA5A5; }
     .btn-topbar { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.14); }
     .btn-topbar:hover { background: rgba(255,255,255,0.16); }
@@ -135,6 +149,7 @@
     .machine-name { font-weight: 600; color: var(--ink); }
     .machine-sub { font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; }
     .badge { display: inline-block; background: #F2F4F7; color: var(--ink-soft); font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+    .badge.warn { background: var(--warning-bg); color: var(--warning); }
     .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
     .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); }
@@ -145,14 +160,15 @@
     .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Modal ─────────────────────────────────────────────────── */
+    /* ── Modals ────────────────────────────────────────────────── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
     .modal-overlay.show { display: flex; }
-    .modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 26px; width: 100%; max-width: 400px; }
-    .modal .icon-badge.danger { background: var(--danger-bg); color: var(--danger); margin-bottom: 14px; }
+    .modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 26px; width: 100%; max-width: 420px; }
     .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .modal p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 22px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal > p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+    .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 4px; }
+    .modal { position: relative; }
 
     /* ── Toasts ────────────────────────────────────────────────── */
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
@@ -216,97 +232,70 @@
         <h1>Checklist Manager</h1>
         <p class="subtitle">Add, edit, and remove machine checklists — changes apply instantly across the web and mobile app.</p>
       </div>
-      <div class="stat-pills" id="stat-pills"></div>
-    </div>
-
-    <!-- Add New Machine -->
-    <section class="card card-accent">
-      <div class="card-head">
-        <div class="icon-badge accent">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
-        <div>
-          <h2>Add New Machine</h2>
-          <p>Give it a name and, optionally, a starter Excel sheet. If you skip the file, it's added with one placeholder step you can edit and upload later.</p>
-        </div>
-      </div>
-
-      <label class="field-label">Machine / Checklist Name</label>
-      <input type="text" id="new-machine-name" placeholder="e.g. Cab Mount Excavator" oninput="document.getElementById('add-machine-btn').disabled = !this.value.trim()" />
-
-      <div class="file-drop" id="add-drop-zone" onclick="document.getElementById('add-file-input').click()">
-        <input type="file" id="add-file-input" accept=".xlsx" onchange="onAddFileSelected(this)" />
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p class="primary">Click to choose a starter Excel file</p>
-        <p>.xlsx — optional, or drag and drop here</p>
-      </div>
-      <div class="file-chip" id="add-file-chip">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span id="add-file-name"></span>
-        <button onclick="clearAddFile()" title="Remove file"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-
-      <button class="btn btn-primary" id="add-machine-btn" onclick="addMachine()" disabled>
+      <button class="btn btn-primary" onclick="openAddModal()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Machine
       </button>
-    </section>
+    </div>
 
-    <!-- Machines list -->
+    <!-- Stat cards -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Machines table -->
     <section class="card">
-      <div class="card-head">
-        <div class="icon-badge">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <div>
-          <h2>Machines</h2>
-          <p>Download any checklist as Excel to edit it, or remove a machine you no longer need.</p>
+      <div class="card-toolbar">
+        <h2>Machines</h2>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Search machines…" oninput="renderTemplateList()" />
         </div>
       </div>
       <div id="template-list">
         <div class="loading-row"><span class="spinner"></span>Loading machines…</div>
       </div>
     </section>
-
-    <!-- Upload -->
-    <section class="card">
-      <div class="card-head">
-        <div class="icon-badge">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </div>
-        <div>
-          <h2>Upload Edited Excel</h2>
-          <p>Select which checklist to update, then upload your edited file. This replaces all of its steps.</p>
-        </div>
-      </div>
-
-      <label class="field-label">Checklist to update</label>
-      <select id="import-select"><option value="">— select a checklist —</option></select>
-
-      <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <input type="file" id="file-input" accept=".xlsx" onchange="onFileSelected(this)" />
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p class="primary">Click to choose an Excel file</p>
-        <p>.xlsx, or drag and drop here</p>
-      </div>
-      <div class="file-chip" id="import-file-chip">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span id="import-file-name"></span>
-        <button onclick="clearImportFile()" title="Remove file"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-
-      <button class="btn btn-primary" id="upload-btn" onclick="uploadFile()" disabled>
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Upload &amp; Update
-      </button>
-    </section>
   </main>
+</div>
+
+<!-- ADD MACHINE MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="icon-badge accent" style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <h3>Add New Machine</h3>
+    <p>Give it a name and, optionally, a starter Excel sheet. If you skip the file, it's added with one placeholder step you can edit and upload later.</p>
+
+    <label class="field-label">Machine / Checklist Name</label>
+    <input type="text" id="new-machine-name" placeholder="e.g. Cab Mount Excavator" oninput="document.getElementById('add-machine-btn').disabled = !this.value.trim()" />
+
+    <div class="file-drop" id="add-drop-zone" onclick="document.getElementById('add-file-input').click()">
+      <input type="file" id="add-file-input" accept=".xlsx" onchange="onAddFileSelected(this)" />
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p class="primary">Click to choose a starter Excel file</p>
+      <p>.xlsx — optional, or drag and drop here</p>
+    </div>
+    <div class="file-chip" id="add-file-chip">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span id="add-file-name"></span>
+      <button onclick="clearAddFile()" title="Remove file"><svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" id="add-machine-btn" onclick="addMachine()" disabled>
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Machine
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- CONFIRM MODAL -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal">
-    <div class="icon-badge danger">
+    <div class="icon-badge danger" style="margin-bottom:14px">
       <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
     </div>
     <h3 id="confirm-title">Delete machine?</h3>
@@ -318,6 +307,9 @@
   </div>
 </div>
 
+<!-- Hidden input used for per-row "Upload" action -->
+<input type="file" id="row-upload-input" accept=".xlsx" style="display:none" onchange="onRowUploadFileSelected(this)" />
+
 <!-- TOASTS -->
 <div id="toast-container"></div>
 
@@ -326,6 +318,7 @@
   let token = localStorage.getItem('re_token') || '';
   let templates = [];
   let systemTypeIdByName = {};
+  let pendingUploadSystemType = null;
 
   // ── Toasts ───────────────────────────────────────────────────────
   function showToast(message, type) {
@@ -368,6 +361,20 @@
       overlay.addEventListener('click', onOverlay);
     });
   }
+
+  // ── Add Machine modal ───────────────────────────────────────────
+  function openAddModal() {
+    document.getElementById('add-modal').classList.add('show');
+  }
+  function closeAddModal() {
+    document.getElementById('add-modal').classList.remove('show');
+    document.getElementById('new-machine-name').value = '';
+    clearAddFile();
+    document.getElementById('add-machine-btn').disabled = true;
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('add-modal')) closeAddModal();
+  });
 
   // ── Auth ────────────────────────────────────────────────────────
   async function login() {
@@ -415,9 +422,8 @@
       if (res.status === 401) { logout(); return; }
       const data = await res.json();
       templates = data.templates || [];
-      renderTemplateList();
-      renderImportSelect();
       renderStats();
+      renderTemplateList();
     } catch (e) {
       document.getElementById('template-list').innerHTML = `<div class="empty-state"><p>Failed to load machines.</p></div>`;
     }
@@ -438,16 +444,32 @@
   }
 
   function renderStats() {
-    const el = document.getElementById('stat-pills');
+    const el = document.getElementById('stats-grid');
     const totalSteps = templates.reduce((sum, t) => sum + t.steps.length, 0);
+    const needsAttention = templates.filter(t => t.steps.length <= 5).length;
     el.innerHTML = `
-      <div class="stat-pill"><strong>${templates.length}</strong> machine${templates.length === 1 ? '' : 's'}</div>
-      <div class="stat-pill"><strong>${totalSteps}</strong> total steps</div>
+      <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div><div class="stat-value">${templates.length}</div><div class="stat-label">Total machines</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div><div class="stat-value">${totalSteps}</div><div class="stat-label">Total checklist steps</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div><div class="stat-value">${needsAttention}</div><div class="stat-label">Need a real sheet uploaded</div></div>
+      </div>
     `;
   }
 
   function renderTemplateList() {
     const el = document.getElementById('template-list');
+    const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+    const visible = query
+      ? templates.filter(t => t.name.toLowerCase().includes(query) || t.systemType.toLowerCase().includes(query))
+      : templates;
+
     if (templates.length === 0) {
       el.innerHTML = `
         <div class="empty-state">
@@ -456,18 +478,26 @@
         </div>`;
       return;
     }
-    const rows = templates.map(t => `
+    if (visible.length === 0) {
+      el.innerHTML = `<div class="empty-state"><p>No machines match "${query}".</p></div>`;
+      return;
+    }
+    const rows = visible.map(t => `
       <tr>
         <td>
           <div class="machine-name">${t.name}</div>
           <div class="machine-sub">${t.systemType}</div>
         </td>
-        <td><span class="badge">${t.steps.length} steps</span></td>
+        <td>
+          <span class="badge ${t.steps.length <= 5 ? 'warn' : ''}">${t.steps.length} steps</span>
+        </td>
         <td>
           <div class="row-actions">
-            <button class="btn btn-secondary btn-sm" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">
+            <button class="btn-icon" title="Download Excel" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">
               <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download
+            </button>
+            <button class="btn-icon" title="Upload edited Excel" onclick="triggerRowUpload('${t.systemType.replace(/'/g,"\\'")}')">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </button>
             <button class="btn-icon danger-outline" title="Delete machine" onclick="deleteMachine('${t.systemType.replace(/'/g,"\\'")}', '${t.name.replace(/'/g,"\\'")}')">
               <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
@@ -483,12 +513,6 @@
           <tbody>${rows}</tbody>
         </table>
       </div>`;
-  }
-
-  function renderImportSelect() {
-    const sel = document.getElementById('import-select');
-    sel.innerHTML = '<option value="">— select a checklist —</option>' +
-      templates.map(t => `<option value="${encodeURIComponent(t.systemType)}">${t.name}</option>`).join('');
   }
 
   // ── Export ───────────────────────────────────────────────────────
@@ -507,6 +531,36 @@
       URL.revokeObjectURL(url);
     } catch (e) {
       showToast('Download failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── Per-row upload ───────────────────────────────────────────────
+  function triggerRowUpload(systemType) {
+    pendingUploadSystemType = systemType;
+    document.getElementById('row-upload-input').click();
+  }
+
+  async function onRowUploadFileSelected(input) {
+    const file = input.files[0];
+    input.value = '';
+    if (!file || !pendingUploadSystemType) return;
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`${BASE}/api/v1/checklists/${encodeURIComponent(pendingUploadSystemType)}/import`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      showToast(data.message, 'success');
+      await loadTemplates();
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      pendingUploadSystemType = null;
     }
   }
 
@@ -578,9 +632,9 @@
       }
 
       showToast(`"${name}" added${addMachineFile ? ' with your sheet' : ' with a placeholder step'}`, 'success');
-      nameInput.value = '';
-      clearAddFile();
-      await showApp();
+      closeAddModal();
+      await loadTemplates();
+      await loadSystemTypes();
     } catch (e) {
       showToast(e.message, 'error');
     } finally {
@@ -611,55 +665,14 @@
         });
       }
       showToast(`"${name}" deleted`, 'success');
-      await showApp();
+      await loadTemplates();
+      await loadSystemTypes();
     } catch (e) {
       showToast('Delete failed: ' + e.message, 'error');
     }
   }
 
-  // ── Import ───────────────────────────────────────────────────────
-  let selectedFile = null;
-
-  function onFileSelected(input) {
-    selectedFile = input.files[0] || null;
-    updateImportFileChip();
-    document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
-  }
-
-  function clearImportFile() {
-    selectedFile = null;
-    document.getElementById('file-input').value = '';
-    updateImportFileChip();
-    document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
-  }
-
-  function updateImportFileChip() {
-    const chip = document.getElementById('import-file-chip');
-    if (selectedFile) {
-      document.getElementById('import-file-name').textContent = selectedFile.name;
-      chip.classList.add('show');
-    } else {
-      chip.classList.remove('show');
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
-    const zone = document.getElementById('drop-zone');
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('over');
-      const f = e.dataTransfer.files[0];
-      if (f && f.name.endsWith('.xlsx')) {
-        selectedFile = f;
-        updateImportFileChip();
-        document.getElementById('upload-btn').disabled = !document.getElementById('import-select').value;
-      } else { showToast('Please drop an .xlsx file', 'error'); }
-    });
-    document.getElementById('import-select').addEventListener('change', () => {
-      document.getElementById('upload-btn').disabled = !selectedFile || !document.getElementById('import-select').value;
-    });
-
     const addZone = document.getElementById('add-drop-zone');
     addZone.addEventListener('dragover', e => { e.preventDefault(); addZone.classList.add('over'); });
     addZone.addEventListener('dragleave', () => addZone.classList.remove('over'));
@@ -675,37 +688,6 @@
     // Auto-login if token exists
     if (token) showApp();
   });
-
-  async function uploadFile() {
-    const systemTypeEncoded = document.getElementById('import-select').value;
-    if (!systemTypeEncoded || !selectedFile) return;
-
-    const btn = document.getElementById('upload-btn');
-    const originalHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:#fff"></span> Uploading…';
-
-    try {
-      const form = new FormData();
-      form.append('file', selectedFile);
-      const res = await fetch(`${BASE}/api/v1/checklists/${systemTypeEncoded}/import`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      showToast(data.message, 'success');
-      clearImportFile();
-      document.getElementById('import-select').value = '';
-      await loadTemplates();
-    } catch (e) {
-      showToast(e.message, 'error');
-    } finally {
-      btn.innerHTML = originalHtml;
-      btn.disabled = !selectedFile || !document.getElementById('import-select').value;
-    }
-  }
 </script>
 </body>
 </html>
