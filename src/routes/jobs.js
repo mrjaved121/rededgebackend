@@ -269,12 +269,21 @@ router.delete('/:id', auth, async (req, res) => {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
-    // Only admin or creator can delete
+    // Admin, the creator, or the assigned installer can delete —
+    // covers the field case where an installer picked the wrong machine profile
+    const isAssignedInstaller =
+      job.assignedTo && job.assignedTo.toString() === req.userId.toString();
     if (
       req.user.role !== 'admin' &&
-      job.createdBy.toString() !== req.userId.toString()
+      job.createdBy.toString() !== req.userId.toString() &&
+      !isAssignedInstaller
     ) {
       return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Completed jobs are records of finished work — protect them from deletion
+    if (job.status === 'completed' && req.user.role !== 'admin') {
+      return res.status(400).json({ error: 'Completed jobs cannot be deleted' });
     }
 
     await Job.findByIdAndDelete(req.params.id);
