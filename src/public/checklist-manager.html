@@ -146,6 +146,8 @@
     table.machines tr:hover td { background: #FBFBFC; }
     .machine-name { font-weight: 600; color: var(--ink); }
     .machine-sub { font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; }
+    .machine-meta { font-size: 12px; color: var(--ink-faint); margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+    .machine-meta svg { width: 12px; height: 12px; flex-shrink: 0; }
     .badge { display: inline-block; background: #F2F4F7; color: var(--ink-soft); font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
     .badge.warn { background: var(--warning-bg); color: var(--warning); }
     .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -167,6 +169,16 @@
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
     .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 4px; }
     .modal { position: relative; }
+
+    /* ── Steps preview ─────────────────────────────────────────── */
+    .steps-table-wrap { max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    table.steps { width: 100%; border-collapse: collapse; }
+    table.steps thead th { position: sticky; top: 0; background: var(--surface); text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    table.steps td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid #F2F4F7; vertical-align: top; color: var(--ink); }
+    table.steps tr:last-child td { border-bottom: none; }
+    table.steps td.step-num { color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+    table.steps tr.step-section-row td { background: #FBFBFC; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); }
+    .step-desc { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
 
     /* ── Toasts ────────────────────────────────────────────────── */
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
@@ -301,6 +313,34 @@
   </div>
 </div>
 
+<!-- VIEW STEPS MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal" style="max-width:640px">
+    <button class="modal-close" onclick="closeViewModal()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <h3 id="view-modal-title">Steps</h3>
+    <p id="view-modal-subtitle"></p>
+    <div class="steps-table-wrap" id="view-modal-steps"></div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeRenameModal()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="icon-badge" style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <h3>Rename Machine</h3>
+    <p>Updates the name on this dashboard, the mobile app, and any existing jobs that already use this machine.</p>
+    <label class="field-label">Machine / Checklist Name</label>
+    <input type="text" id="rename-input" placeholder="e.g. Cab Mount Excavator" oninput="document.getElementById('rename-save-btn').disabled = !this.value.trim()" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRenameModal()">Cancel</button>
+      <button class="btn btn-primary" id="rename-save-btn" onclick="saveRename()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Hidden input used for per-row "Upload" action -->
 <input type="file" id="row-upload-input" accept=".xlsx" style="display:none" onchange="onRowUploadFileSelected(this)" />
 
@@ -368,6 +408,8 @@
   }
   document.addEventListener('click', (e) => {
     if (e.target === document.getElementById('add-modal')) closeAddModal();
+    if (e.target === document.getElementById('view-modal')) closeViewModal();
+    if (e.target === document.getElementById('rename-modal')) closeRenameModal();
   });
 
   // ── Auth ────────────────────────────────────────────────────────
@@ -457,6 +499,21 @@
     `;
   }
 
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatEditedMeta(t) {
+    const name = escapeHtml(t.createdBy && t.createdBy.name ? t.createdBy.name : 'Unknown');
+    const dateStr = t.updatedAt || t.createdAt;
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const formatted = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return `Edited by ${name} · ${formatted}`;
+  }
+
   function renderTemplateList() {
     const el = document.getElementById('template-list');
     const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
@@ -481,12 +538,19 @@
         <td>
           <div class="machine-name">${t.name}</div>
           <div class="machine-sub">${t.systemType}</div>
+          <div class="machine-meta"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${formatEditedMeta(t)}</div>
         </td>
         <td>
           <span class="badge ${t.steps.length <= 5 ? 'warn' : ''}">${t.steps.length} steps</span>
         </td>
         <td>
           <div class="row-actions">
+            <button class="btn-icon" title="View steps" onclick="openViewModal('${t.systemType.replace(/'/g,"\\'")}')">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="btn-icon" title="Rename machine" onclick="openRenameModal('${t.systemType.replace(/'/g,"\\'")}', '${t.name.replace(/'/g,"\\'")}')">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
             <button class="btn-icon" title="Download Excel" onclick="downloadExcel('${encodeURIComponent(t.systemType)}', '${t.name.replace(/'/g,"\\'")}')">
               <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
@@ -525,6 +589,94 @@
       URL.revokeObjectURL(url);
     } catch (e) {
       showToast('Download failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── View steps ───────────────────────────────────────────────────
+  function openViewModal(systemType) {
+    const t = templates.find(x => x.systemType === systemType);
+    if (!t) return;
+    document.getElementById('view-modal-title').textContent = t.name;
+    document.getElementById('view-modal-subtitle').textContent = `${t.steps.length} step${t.steps.length === 1 ? '' : 's'} · ${t.systemType}`;
+    document.getElementById('view-modal-steps').innerHTML = renderStepsTable(t.steps);
+    document.getElementById('view-modal').classList.add('show');
+  }
+  function closeViewModal() {
+    document.getElementById('view-modal').classList.remove('show');
+  }
+  function renderStepsTable(steps) {
+    const photoIcon = '<svg class="icon" style="width:14px;height:14px;color:var(--primary)" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+    const rows = steps.map(s => {
+      if (s.inputType === 'section_header') {
+        return `<tr class="step-section-row"><td colspan="4">${escapeHtml(s.title)}</td></tr>`;
+      }
+      const desc = s.description ? `<div class="step-desc">${escapeHtml(s.description)}</div>` : '';
+      return `
+        <tr>
+          <td class="step-num">${s.number}</td>
+          <td>${escapeHtml(s.title)}${desc}</td>
+          <td><span class="badge">${escapeHtml(s.inputType || 'checkbox')}</span></td>
+          <td style="text-align:center">${s.requiresPhoto ? photoIcon : ''}</td>
+        </tr>`;
+    }).join('');
+    return `
+      <table class="steps">
+        <thead><tr><th style="width:36px">#</th><th>Step</th><th style="width:110px">Type</th><th style="width:60px;text-align:center">Photo</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ── Rename ───────────────────────────────────────────────────────
+  let renameTargetSystemType = null;
+  function openRenameModal(systemType, currentName) {
+    renameTargetSystemType = systemType;
+    const input = document.getElementById('rename-input');
+    input.value = currentName;
+    document.getElementById('rename-save-btn').disabled = false;
+    document.getElementById('rename-modal').classList.add('show');
+  }
+  function closeRenameModal() {
+    document.getElementById('rename-modal').classList.remove('show');
+    renameTargetSystemType = null;
+  }
+  async function saveRename() {
+    const name = document.getElementById('rename-input').value.trim();
+    if (!name || !renameTargetSystemType) return;
+    const btn = document.getElementById('rename-save-btn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.4);border-top-color:#fff"></span> Saving…';
+
+    try {
+      const oldSystemType = renameTargetSystemType;
+      const systemTypeId = systemTypeIdByName[oldSystemType];
+
+      const res = await fetch(`${BASE}/api/v1/checklists/${encodeURIComponent(oldSystemType)}/rename`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Rename failed');
+
+      if (systemTypeId) {
+        await fetch(`${BASE}/api/v1/system-types/${systemTypeId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name }),
+        });
+      }
+
+      const jobsNote = data.jobsUpdated ? ` — updated ${data.jobsUpdated} existing job${data.jobsUpdated === 1 ? '' : 's'}` : '';
+      showToast(`Renamed to "${name}"${jobsNote}`, 'success');
+      closeRenameModal();
+      await loadTemplates();
+      await loadSystemTypes();
+    } catch (e) {
+      showToast(e.message, 'error');
+      btn.disabled = false;
+    } finally {
+      btn.innerHTML = originalHtml;
     }
   }
 

@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const ExcelJS = require('exceljs');
 const ChecklistTemplate = require('../models/ChecklistTemplate');
+const Job = require('../models/Job');
 const { auth, adminOnly } = require('../middleware/auth');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -110,6 +111,45 @@ router.post('/:systemType/import', auth, adminOnly, upload.single('file'), async
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// PATCH /api/v1/checklists/:systemType/rename — rename a machine everywhere,
+// including any existing jobs that reference the old systemType (admin only)
+router.patch(
+  '/:systemType/rename',
+  auth,
+  adminOnly,
+  [body('name').trim().notEmpty().withMessage('Name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const oldSystemType = req.params.systemType;
+      const newName = req.body.name;
+
+      const template = await ChecklistTemplate.findOne({ systemType: oldSystemType });
+      if (!template) return res.status(404).json({ error: 'Checklist template not found' });
+
+      if (newName !== oldSystemType) {
+        const conflict = await ChecklistTemplate.findOne({ systemType: newName });
+        if (conflict) return res.status(409).json({ error: 'A machine with that name already exists' });
+      }
+
+      template.systemType = newName;
+      template.name = newName;
+      await template.save();
+
+      const jobsResult = await Job.updateMany({ systemType: oldSystemType }, { systemType: newName });
+
+      res.json({ template, jobsUpdated: jobsResult.modifiedCount });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
 // GET /api/v1/checklists/:systemType — single template by system type
 router.get('/:systemType', auth, async (req, res) => {

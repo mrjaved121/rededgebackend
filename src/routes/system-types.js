@@ -57,6 +57,39 @@ router.post(
   }
 );
 
+// PATCH /api/v1/system-types/:id — rename (admin only)
+router.patch(
+  '/:id',
+  auth,
+  adminOnly,
+  [body('name').trim().notEmpty().withMessage('Name is required')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const type = await SystemType.findById(req.params.id);
+      if (!type) return res.status(404).json({ error: 'System type not found' });
+
+      const newName = req.body.name;
+      if (newName !== type.name) {
+        const conflict = await SystemType.findOne({ name: newName });
+        if (conflict) return res.status(409).json({ error: 'System type already exists' });
+      }
+
+      type.name = newName;
+      await type.save();
+
+      res.json({ id: type._id, name: type.name, createdAt: type.createdAt });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
 // DELETE /api/v1/system-types/:id — delete (admin only)
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
