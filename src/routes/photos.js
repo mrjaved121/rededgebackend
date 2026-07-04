@@ -134,6 +134,17 @@ router.delete('/:id', auth, async (req, res) => {
       }
     }
 
+    if (photo.jobId && photo.stepId) {
+      const job = await Job.findById(photo.jobId);
+      if (job) {
+        const step = job.steps.id(photo.stepId);
+        if (step) {
+          step.photos.pull(photo._id);
+          await job.save();
+        }
+      }
+    }
+
     await Photo.findByIdAndDelete(req.params.id);
     res.json({ message: 'Photo deleted' });
   } catch (err) {

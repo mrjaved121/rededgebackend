@@ -66,6 +66,12 @@ app.get('/checklist-manager', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'checklist-manager.html'));
 });
 
+// Job review page
+app.use('/job-review', express.static(path.join(__dirname, 'public')));
+app.get('/job-review', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'job-review.html'));
+});
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/jobs', jobRoutes);

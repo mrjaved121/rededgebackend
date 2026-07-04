@@ -226,10 +226,16 @@
         <span>Checklist Manager</span>
       </div>
     </div>
-    <button class="btn btn-topbar btn-sm" onclick="logout()">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Sign out
-    </button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <a class="btn btn-topbar btn-sm" href="/job-review/" style="text-decoration:none">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Job Review
+      </a>
+      <button class="btn btn-topbar btn-sm" onclick="logout()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
   </nav>
 
   <main class="container">
